@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Theft Detection System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --bg-color: #f8f9fa;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 50% 50% / 30px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 auto 1rem;
+        }
+        
+        .upload-area {
+            border: 3px dashed var(--secondary-color);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            background: rgba(52, 152, 219, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .result-box {
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .result-normal {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 2px solid var(--success-color);
+        }
+        
+        .result-suspicious {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border: 2px solid var(--danger-color);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 10px;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .table thead th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+        }
+        
+        .row-suspicious {
+            background-color: rgba(231, 76, 60, 0.15) !important;
+        }
+        
+        .row-normal {
+            background-color: rgba(39, 174, 96, 0.1) !important;
+        }
+        
+        .badge-suspicious {
+            background: var(--danger-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .badge-normal {
+            background: var(--success-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+        }
+        
+        footer {
+            background: var(--primary-color);
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .prediction-btn {
+            padding: 0.4rem 1rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-bolt me-2"></i>
+                Electricity Theft Detection
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#upload-section">
+                            <i class="fas fa-upload me-1"></i> Upload
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#manual-section">
+                            <i class="fas fa-edit me-1"></i> Manual Entry
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-shield-alt me-3"></i>
+                Smart Theft Detection System
+            </h1>
+            <p class="lead mb-0">
+                Upload your energy data or enter values manually to detect potential electricity theft
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Model Status -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h5>Model Status</h5>
+                        <p class="mb-0">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i> Model Loaded
+                            </span>
+                            <span class="ms-2">Features: {{ features|join(', ') }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="row mb-4" id="upload-section">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-upload me-2"></i>
+                        Upload Dataset
+                    </div>
+                    <div class="card-body">
+                        <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form">
+                            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: var(--secondary-color);"></i>
+                                <h5>Click to Upload File</h5>
+                                <p class="text-muted mb-0">Supported formats: CSV, Excel (.xlsx, .xls)</p>
+                                <input type="file" id="fileInput" name="file" accept=".csv,.xlsx,.xls" style="display: none;" onchange="this.form.submit()">
+                            </div>
+                        </form>
+                        
+                        <div class="loading-spinner" id="loadingSpinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Processing your file...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table (shown after upload) -->
+        {% if uploaded and data %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-table me-2"></i>
+                            Dataset: {{ data.filename }} ({{ data.row_count }} rows)
+                        </div>
+                        <a href="/clear" class="btn btn-sm btn-outline-light">
+                            <i class="fas fa-times me-1"></i> Clear
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table table-hover" id="dataTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        {% for col in data.columns %}
+                                        <th>{{ col }}</th>
+                                        {% endfor %}
+                                        <th>Prediction</th>
+                                        <th>Confidence</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in data.predictions %}
+                                    <tr class="{{ 'row-suspicious' if row.prediction == 'Suspicious' else 'row-normal' if row.prediction == 'Normal' else '' }}">
+                                        <td>{{ loop.index }}</td>
+                                        {% for col in data.columns %}
+                                        <td>{{ row[col] }}</td>
+                                        {% endfor %}
+                                        <td>
+                                            <span class="{{ 'badge-suspicious' if row.prediction == 'Suspicious' else 'badge-normal' if row.prediction == 'Normal' else 'badge bg-secondary' }}">
+                                                {{ row.prediction }}
+                                            </span>
+                                        </td>
+                                        <td>{{ row.confidence }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary prediction-btn" 
+                                                    onclick="predictRow({{ loop.index0 }}, {{ row|tojson }})">
+                                                <i class="fas fa-search"></i> Check
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if data.total_rows > 100 %}
+                        <p class="text-muted mt-2 text-center">
+                            Showing first 100 of {{ data.total_rows }} rows
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Manual Entry Section -->
+        <div class="row mb-4" id="manual-section">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-edit me-2"></i>
+                        Manual Data Entry
+                    </div>
+                    <div class="card-body">
+                        <form action="/predict_manual" method="POST" id="manualForm">
+                            <div class="row">
+                                {% for feature in features %}
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ feature }}" class="form-label">
+                                        {{ feature|title }}
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="{{ feature }}" 
+                                           name="{{ feature }}" 
+                                           step="any"
+                                           required
+                                           value="{{ manual_input[feature] if manual_input else '' }}"
+                                           placeholder="Enter {{ feature }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-center mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>
+                                    Check for Theft
+                                </button>
+                                <button type="reset" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-redo me-2"></i>
+                                    Clear
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Manual Prediction Result -->
+                        {% if manual_result %}
+                        <div class="result-box mt-4 {{ 'result-suspicious' if manual_result.prediction == 'Suspicious' else 'result-normal' }}">
+                            <h4>
+                                <i class="fas {{ 'fa-exclamation-triangle' if manual_result.prediction == 'Suspicious' else 'fa-check-circle' }} me-2"></i>
+                                {{ manual_result.prediction }}
+                            </h4>
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Confidence:</strong></p>
+                                    <h5>{{ manual_result.confidence }}</h5>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Normal Probability:</strong></p>
+                                    <h5>{{ manual_result.normal_probability }}</h5>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Suspicious Probability:</strong></p>
+                                    <h5>{{ manual_result.suspicious_probability }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions Section -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i>
+                        How to Use
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fas fa-1"></i>
+                                </div>
+                                <h6>Upload Dataset</h6>
+                                <p class="text-muted small">Upload a CSV or Excel file with energy consumption data</p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fas fa-2"></i>
+                                </div>
+                                <h6>View Predictions</h6>
+                                <p class="text-muted small">See prediction results for each row in the dataset</p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fas fa-3"></i>
+                                </div>
+                                <h6>Manual Entry</h6>
+                                <p class="text-muted small">Enter values manually to check individual cases</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="fas fa-bolt me-2"></i>
+                Electricity Theft Detection System &copy; 2024
+            </p>
+        </div>
+    </footer>
+
+    <!-- Prediction Modal -->
+    <div class="modal fade" id="predictionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Prediction Result</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show loading spinner on form submit
+        document.getElementById('upload-form')?.addEventListener('submit', function() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.querySelector('.upload-area').style.display = 'none';
+        });
+
+        // Predict row function
+        async function predictRow(index, rowData) {
+            const modal = new bootstrap.Modal(document.getElementById('predictionModal'));
+            const modalBody = document.getElementById('modalBody');
+            
+            // Extract features from row
+            const features = ["mean", "std", "max", "min", "zero_days", "cv", "range"];
+            const extractedData = {};
+            
+            for (const feature of features) {
+                if (rowData[feature] !== undefined) {
+                    extractedData[feature] = rowData[feature];
+                }
+            }
+            
+            try {
+                const response = await fetch('/predict_row', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        row_index: index,
+                        row_data: extractedData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i> ' + result.error + '</div>';
+                } else {
+                    const isSuspicious = result.prediction === 'Suspicious';
+                    modalBody.innerHTML = '<div class="text-center mb-3"><i class="fas ' + (isSuspicious ? 'fa-exclamation-triangle text-danger' : 'fa-check-circle text-success') + '" style="font-size: 3rem;"></i></div><h4 class="text-center ' + (isSuspicious ? 'text-danger' : 'text-success') + '">' + result.prediction + '</h4><hr><div class="row text-center"><div class="col-6"><p class="mb-1"><strong>Confidence</strong></p><h5>' + result.confidence + '</h5></div><div class="col-6"><p class="mb-1"><strong>Suspicious</strong></p><h5>' + result.suspicious_probability + '</h5></div></div>';
+                }
+            } catch (error) {
+                modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i> Error: ' + error.message + '</div>';
+            }
+            
+            modal.show();
+        }
+
+        // Form validation
+        document.getElementById('manualForm')?.addEventListener('submit', function(e) {
+            const inputs = this.querySelectorAll('input[required]');
+            let valid = true;
+            
+            inputs.forEach(function(input) {
+                if (!input.value) {
+                    input.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
+
