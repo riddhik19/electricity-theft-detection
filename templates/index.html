@@ -221,6 +221,17 @@
             padding: 0.4rem 1rem;
             font-size: 0.875rem;
         }
+
+        /* Chat Reference Styles */
+        #chat-messages .bg-primary {
+            color: white;
+        }
+        #chat-messages .bg-light {
+            border-left: 3px solid var(--secondary-color);
+        }
+        #chat-messages {
+            min-height: 200px;
+        }
     </style>
 </head>
 <body>
@@ -374,8 +385,7 @@
                                         </td>
                                         <td>{{ row.confidence }}</td>
                                         <td>
-                                            <button class="btn btn-sm btn-primary prediction-btn" 
-                                                    onclick="predictRow({{ loop.index0 }}, {{ row|tojson }})">
+                                            <button class="btn btn-sm btn-primary prediction-btn" onclick="predictRow({{ loop.index0 }}, {{ row|tojson }})">
                                                 <i class="fas fa-search"></i> Check
                                             </button>
                                         </td>
@@ -463,24 +473,24 @@
             </div>
         </div>
 
-        <!-- Chat Section (NEW!) -->
-        <div class="row mb-4" id="chat-section">
+        <!-- Clean Chat Assistant (User Reference) -->
+        <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-comments me-2"></i>
-                        Theft Detection Assistant 💬
+                        💡 Electricity Theft Chat Assistant
                     </div>
                     <div class="card-body">
-                        <div id="chat-messages" class="border rounded p-3 mb-3" style="height: 300px; overflow-y: auto; background: #f8f9fa;">
-                            <div class="text-center text-muted mb-3">
-                                <i class="fas fa-robot fa-2x mb-2 d-block"></i>
-                                <small>Ask about electricity theft detection, features, or predict with values!</small>
+                        <div id="chat-messages" style="height:300px; overflow-y:auto;" class="border rounded p-3 mb-3 bg-light">
+                            <div class="text-center text-muted">
+                                Ask something like: <br>
+                                <small>"features?" or "predict mean=15 std=4 max=25 min=3 zero_days=0 cv=0.27 range=22"</small>
                             </div>
                         </div>
                         <div class="input-group">
-                            <input type="text" id="chat-input" class="form-control" placeholder="e.g. 'features?' or 'predict mean=15 std=4 max=25 min=3 zero_days=0 cv=0.27 range=22'">
-                            <button class="btn btn-primary" onclick="sendChat()">
+                            <input type="text" id="chat-input" class="form-control" placeholder="Type message... (Enter to send)">
+                            <button class="btn btn-primary" id="chat-send-btn">
                                 <i class="fas fa-paper-plane"></i> Send
                             </button>
                         </div>
@@ -524,8 +534,8 @@
                                 <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="fas fa-comments"></i>
                                 </div>
-                                <h6>Ask Assistant</h6>
-                                <p class="text-muted small">Chat for help!</p>
+                                <h6>Chat Assistant</h6>
+                                <p class="text-muted small">Ask anything!</p>
                             </div>
                         </div>
                     </div>
@@ -534,13 +544,12 @@
         </div>
     </div>
 
-
     <!-- Footer -->
     <footer>
         <div class="container text-center">
             <p class="mb-0">
                 <i class="fas fa-bolt me-2"></i>
-                Electricity Theft Detection System &copy; 2024
+                Electricity Theft Detection System &copy; 2024 with Chat Assistant 💬
             </p>
         </div>
     </footer>
@@ -565,18 +574,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Show loading spinner on form submit
+        // Upload loader
         document.getElementById('upload-form')?.addEventListener('submit', function() {
             document.getElementById('loadingSpinner').style.display = 'block';
             document.querySelector('.upload-area').style.display = 'none';
         });
 
-        // Predict row function
+        // Predict row AJAX
         async function predictRow(index, rowData) {
             const modal = new bootstrap.Modal(document.getElementById('predictionModal'));
             const modalBody = document.getElementById('modalBody');
-            
-            // Extract features from row
             const features = ["mean", "std", "max", "min", "zero_days", "cv", "range"];
             const extractedData = {};
             
@@ -589,31 +596,26 @@
             try {
                 const response = await fetch('/predict_row', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        row_index: index,
-                        row_data: extractedData
-                    })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({row_index: index, row_data: extractedData})
                 });
                 
                 const result = await response.json();
                 
                 if (result.error) {
-                    modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i> ' + result.error + '</div>';
+                    modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>' + result.error + '</div>';
                 } else {
                     const isSuspicious = result.prediction === 'Suspicious';
                     modalBody.innerHTML = '<div class="text-center mb-3"><i class="fas ' + (isSuspicious ? 'fa-exclamation-triangle text-danger' : 'fa-check-circle text-success') + '" style="font-size: 3rem;"></i></div><h4 class="text-center ' + (isSuspicious ? 'text-danger' : 'text-success') + '">' + result.prediction + '</h4><hr><div class="row text-center"><div class="col-6"><p class="mb-1"><strong>Confidence</strong></p><h5>' + result.confidence + '</h5></div><div class="col-6"><p class="mb-1"><strong>Suspicious</strong></p><h5>' + result.suspicious_probability + '</h5></div></div>';
                 }
             } catch (error) {
-                modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i> Error: ' + error.message + '</div>';
+                modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error: ' + error.message + '</div>';
             }
             
             modal.show();
         }
 
-        // Form validation
+        // Manual form validation
         document.getElementById('manualForm')?.addEventListener('submit', function(e) {
             const inputs = this.querySelectorAll('input[required]');
             let valid = true;
@@ -627,75 +629,80 @@
                 }
             });
             
-            if (!valid) {
-                e.preventDefault();
-            }
+            if (!valid) e.preventDefault();
         });
 
-        // NEW: Chat functionality (lightweight)
-        async function sendChat() {
-            const input = document.getElementById('chat-input');
-            const messages = document.getElementById('chat-messages');
-            const query = input.value.trim();
-            
-            if (!query) return;
-            
-            // Add user message
-            messages.innerHTML += `
-                <div class="d-flex mb-2">
-                    <div class="flex-grow-1 ms-3">
-                        <div class="bg-primary text-white p-2 rounded-pill small w-75 ms-auto">You: ${query}</div>
-                    </div>
-                </div>
-            `;
-            
-            input.value = '';
-            messages.scrollTop = messages.scrollHeight;
-            
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
-                });
-                
-                const data = await response.json();
-                
-                // Add bot response
-                const botMsg = data.response || 'Sorry, I didn\\'t understand.';
-                messages.innerHTML += `
-                    <div class="d-flex mb-3">
-                        <div class="feature-icon me-2 bg-secondary">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="bg-light p-3 rounded border">${botMsg}</div>
-                        </div>
-                    </div>
-                `;
-                
-                messages.scrollTop = messages.scrollHeight;
-                
-            } catch (error) {
-                messages.innerHTML += `
-                    <div class="d-flex mb-3">
-                        <div class="feature-icon me-2 bg-danger">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="bg-light p-3 rounded border text-danger">Chat error. Try again!</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
+        // ✅ CLEAN CHAT JS (User Reference - Fixed Syntax)
+        document.addEventListener('DOMContentLoaded', function () {
+            async function sendChat() {
+                const input = document.getElementById('chat-input');
+                const messages = document.getElementById('chat-messages');
+                const btn = document.getElementById('chat-send-btn');
 
-        // Enter to send chat
-        document.getElementById('chat-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendChat();
+                const query = input.value.trim();
+                if (!query) return;
+
+                // User message
+                messages.innerHTML += `
+                    <div class="d-flex justify-content-end mb-2">
+                        <div class="bg-primary text-white p-2 rounded-pill small" style="max-width: 75%;">
+                            ${query}
+                        </div>
+                    </div>
+                `;
+
+                input.value = '';
+                messages.scrollTop = messages.scrollHeight;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ query: query })
+                    });
+
+                    const data = await response.json();
+
+                    const botMsg = data.response || "Sorry, I didn't understand.";
+
+                    messages.innerHTML += `
+                        <div class="d-flex mb-3">
+                            <div class="feature-icon me-2" style="width:40px;height:40px;background:#3498db;">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="bg-light p-3 rounded border">
+                                    ${botMsg}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                } catch (error) {
+                    messages.innerHTML += `
+                        <div class="text-danger">Error connecting to server</div>
+                    `;
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            document.getElementById('chat-send-btn').addEventListener('click', sendChat);
+
+            document.getElementById('chat-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendChat();
+                }
+            });
         });
     </script>
 </body>
 </html>
-
 
