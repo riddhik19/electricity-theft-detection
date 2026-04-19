@@ -23,12 +23,21 @@ MODEL_PATH = 'theft_model.pkl'
 model = None
 model_features = ['mean', 'std', 'max', 'min', 'zero_days', 'cv', 'range']
 
+# Chat knowledge base (lightweight FAQs)
+chat_knowledge = {
+    "features": "The model uses 7 key statistical features from daily energy data:\n• **mean**: Average daily consumption\n• **std**: Standard deviation (variability)\n• **max**: Peak daily usage\n• **min**: Lowest daily usage\n• **zero_days**: Days with zero consumption\n• **cv**: Coefficient of variation (std/mean)\n• **range**: Max - Min\n\nHigh zero_days, high CV, or irregular patterns flag theft!",
+    "how": "The LightGBM model (98% accurate) detects theft by spotting anomalous patterns like:\n• Frequent zero consumption days\n• High variability (CV > 0.3)\n• Sudden drops in mean usage\n• Unusual range patterns\n\nPrediction threshold: >25% theft probability = Suspicious",
+    "predict": "Provide features like: 'predict mean=15.5 std=4.2 max=25.3 min=3.1 zero_days=0 cv=0.27 range=22.2'",
+    "help": "Ask about 'features', 'how it works', or 'predict [values]' with all 7 features."
+}
+
 try:
     model = joblib.load(MODEL_PATH)
     print(f"Model loaded successfully!")
 except Exception as e:
     print(f"Warning: Could not load model - {e}")
     print("Please ensure theft_model.pkl exists in the application directory")
+
 
 
 def allowed_file(filename):
@@ -200,6 +209,53 @@ def predict_manual():
         return redirect(url_for('index'))
 
 
+@app.route('/chat', methods=['POST'])
+def chat():
+    """Lightweight chat endpoint for theft questions"""
+    query = request.json.get('query', '').lower().strip()
+    
+    if not query:
+        return jsonify({'response': 'Ask me anything about electricity theft detection!'})
+    
+    # Simple keyword matching for FAQs
+    if any(word in query for word in ['feature', 'what', 'use']):
+        return jsonify({'response': chat_knowledge['features']})
+    
+    if any(word in query for word in ['how', 'work', 'detect']):
+        return jsonify({'response': chat_knowledge['how']})
+    
+    if 'help' in query:
+        return jsonify({'response': chat_knowledge['help']})
+    
+    # Try to parse prediction request
+    import re
+    feature_match = re.findall(r'(\w+)=([0-9.-]+)', query)
+    data_dict = dict(feature_match)
+    
+    if len(data_dict) >= len(model_features) or 'predict' in query:
+        # Fill missing with defaults if partial
+        for f in model_features:
+            if f not in data_dict:
+                data_dict[f] = 10.0  # neutral default
+        
+        prediction, probability, error = predict_theft(data_dict)
+        
+        if error:
+            return jsonify({'response': f"Prediction error: {error}"})
+        
+        pred_text = 'Suspicious! 🚨' if prediction == 1 else 'Normal ✅'
+        prob_text = f"Theft probability: {probability[1]*100:.1f}%"
+        
+        return jsonify({
+            'response': f"{pred_text}\n{prob_text}\n\n{chat_knowledge['features']}",
+            'prediction': prediction,
+            'suspicious_prob': float(probability[1])
+        })
+    
+    # Fallback
+    return jsonify({'response': "I can explain features, how detection works, or predict theft! Try 'features?' or 'predict mean=15 std=4 max=25 min=3 zero_days=0 cv=0.27 range=22'"})
+
+
 @app.route('/clear')
 def clear_data():
     """Clear uploaded data"""
@@ -222,4 +278,5 @@ if __name__ == '__main__':
     print(f"Model features: {model_features}")
     print("=" * 60)
     app.run(debug=True, host='0.0.0.0', port=5000)
+
 

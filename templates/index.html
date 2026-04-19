@@ -463,6 +463,32 @@
             </div>
         </div>
 
+        <!-- Chat Section (NEW!) -->
+        <div class="row mb-4" id="chat-section">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-comments me-2"></i>
+                        Theft Detection Assistant 💬
+                    </div>
+                    <div class="card-body">
+                        <div id="chat-messages" class="border rounded p-3 mb-3" style="height: 300px; overflow-y: auto; background: #f8f9fa;">
+                            <div class="text-center text-muted mb-3">
+                                <i class="fas fa-robot fa-2x mb-2 d-block"></i>
+                                <small>Ask about electricity theft detection, features, or predict with values!</small>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="chat-input" class="form-control" placeholder="e.g. 'features?' or 'predict mean=15 std=4 max=25 min=3 zero_days=0 cv=0.27 range=22'">
+                            <button class="btn btn-primary" onclick="sendChat()">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Instructions Section -->
         <div class="row mb-4">
             <div class="col-md-12">
@@ -473,26 +499,33 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 text-center">
+                            <div class="col-md-3 text-center">
                                 <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="fas fa-1"></i>
                                 </div>
-                                <h6>Upload Dataset</h6>
-                                <p class="text-muted small">Upload a CSV or Excel file with energy consumption data</p>
+                                <h6>Upload</h6>
+                                <p class="text-muted small">CSV/Excel data</p>
                             </div>
-                            <div class="col-md-4 text-center">
+                            <div class="col-md-3 text-center">
                                 <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="fas fa-2"></i>
                                 </div>
-                                <h6>View Predictions</h6>
-                                <p class="text-muted small">See prediction results for each row in the dataset</p>
+                                <h6>View Results</h6>
+                                <p class="text-muted small">Instant predictions</p>
                             </div>
-                            <div class="col-md-4 text-center">
+                            <div class="col-md-3 text-center">
                                 <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="fas fa-3"></i>
                                 </div>
-                                <h6>Manual Entry</h6>
-                                <p class="text-muted small">Enter values manually to check individual cases</p>
+                                <h6>Manual Check</h6>
+                                <p class="text-muted small">Enter values</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="feature-icon" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <h6>Ask Assistant</h6>
+                                <p class="text-muted small">Chat for help!</p>
                             </div>
                         </div>
                     </div>
@@ -500,6 +533,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Footer -->
     <footer>
@@ -597,7 +631,71 @@
                 e.preventDefault();
             }
         });
+
+        // NEW: Chat functionality (lightweight)
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const messages = document.getElementById('chat-messages');
+            const query = input.value.trim();
+            
+            if (!query) return;
+            
+            // Add user message
+            messages.innerHTML += `
+                <div class="d-flex mb-2">
+                    <div class="flex-grow-1 ms-3">
+                        <div class="bg-primary text-white p-2 rounded-pill small w-75 ms-auto">You: ${query}</div>
+                    </div>
+                </div>
+            `;
+            
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                
+                const data = await response.json();
+                
+                // Add bot response
+                const botMsg = data.response || 'Sorry, I didn\\'t understand.';
+                messages.innerHTML += `
+                    <div class="d-flex mb-3">
+                        <div class="feature-icon me-2 bg-secondary">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="bg-light p-3 rounded border">${botMsg}</div>
+                        </div>
+                    </div>
+                `;
+                
+                messages.scrollTop = messages.scrollHeight;
+                
+            } catch (error) {
+                messages.innerHTML += `
+                    <div class="d-flex mb-3">
+                        <div class="feature-icon me-2 bg-danger">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="bg-light p-3 rounded border text-danger">Chat error. Try again!</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Enter to send chat
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendChat();
+        });
     </script>
 </body>
 </html>
+
 
